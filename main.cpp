@@ -6,14 +6,6 @@
 
 using namespace std;
 
-
-long double calc_eps(long double delta_max, long double max_value){
-    if (max_value == 0)
-        return 0;
-
-    return delta_max/max_value;
-}
-
 int main() {
 
     // начальные параметры
@@ -43,6 +35,7 @@ int main() {
     const long long N_R = ceil(R / dr) + 1;
     const long long N_Z = ceil(1.0 / dz) + 1;
 
+    // инициализация массивов
     long double **W = new long double *[N_R];
     for (long long i = 0; i < N_R; i++)
         W[i] = new long double[N_Z];
@@ -59,7 +52,7 @@ int main() {
     for (long long i = 0; i < N_R; i++)
         PSI_new[i] = new long double[N_Z];
 
-    //init
+    // начальные значения
     for (long long i = 0; i < N_R; i++){
         for (long long k = 0; k < N_Z; k++) {
             W[i][k] = 0;
@@ -70,8 +63,10 @@ int main() {
         }
     }
 
+    // установление PSI
     long double eps;
     while (eps_max_PSI > eps_PSI){
+        // начальные условия W
         eps_max_PSI = 0.0;
         for (long long k = 0; k < N_Z; k++){
             W[0][k] = 2.0/dr/dr * PSI[1][k];
@@ -89,7 +84,9 @@ int main() {
             W_new[i][N_Z-1] = W[i][N_Z-1];
         }
 
+        // установление W
         while (eps_max_W > eps_W/* | t_W < 0.001*/){
+            // обновление слоя W
             eps_max_W = 0.0;
             for (long long i = 1; i < N_R-1; i++){
                 for (long long k = 1; k < N_Z-1; k++) {
@@ -126,7 +123,7 @@ int main() {
         eps_max_W = eps_W + 1;
 
 
-        // PSI
+        // обновление слоя PSI
         for (long long i = 1; i < N_R-1; i++){
             for (long long k = 1; k < N_Z-1; k++) {
                 PSI_new[i][k] = PSI[i][k] + dt*(
@@ -156,7 +153,7 @@ int main() {
 
         t_PSI += dt;
 
-
+        // вывод промежуточных результатов в файл
         if (t_PSI - last_time_print > time_step){
             last_time_print = t_PSI;
             cout << "t_PSI = " << t_PSI << "\teps_max_PSI = " << eps_max_PSI << "\t|PSI_max| = " << PSI_max << "\t|W_max| = " << W_max << endl;
@@ -181,6 +178,7 @@ int main() {
         }
     }
 
+    // вывод в файл последний слой PSI и W
     ofstream outFile_csv("out_last.csv");
     for (long long i = 0; i < N_R; i++)
         for (long long k = 0; k < N_Z; k++)
@@ -194,4 +192,6 @@ int main() {
             outFile_txt << i * dr << "\t" << k * dz << "\t" << PSI[i][k] << "\t" << W[i][k] << endl;
     outFile_txt.close();
 
+
+    return 0;
 }
